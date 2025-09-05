@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><title>Auth - Job Hunter</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { margin-bottom: 20px; max-width: 400px; }
+    input, textarea { display:block; margin:8px 0; width:100%; padding:8px; }
+  </style>
+</head>
+<body>
+  <h2>Register</h2>
+  <form id="register">
+    <input name="name" placeholder="Full name" required />
+    <input name="email" placeholder="Email" type="email" required />
+    <input name="password" placeholder="Password" type="password" required />
+    <select name="role">
+      <option value="candidate">Candidate</option>
+      <option value="recruiter">Recruiter</option>
+    </select>
+    <button>Register</button>
+  </form>
+
+  <h2>Login</h2>
+  <form id="login">
+    <input name="email" placeholder="Email" type="email" required />
+    <input name="password" placeholder="Password" type="password" required />
+    <button>Login</button>
+  </form>
+
+  <script>
+    const apiBase = '';
+
+    document.getElementById('register').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        email: form.email.value,
+        password: form.password.value,
+        role: form.role.value
+      };
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      alert(JSON.stringify(json));
+    });
+
+    document.getElementById('login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        email: form.email.value,
+        password: form.password.value
+      };
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.token) {
+        localStorage.setItem('token', json.token);
+        localStorage.setItem('user', JSON.stringify(json.user));
+        alert('Logged in. Go to dashboard.html');
+        window.location = '/dashboard.html';
+      } else {
+        alert(JSON.stringify(json));
+      }
+    });
+  </script>
+</body>
+</html>

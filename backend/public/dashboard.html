@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"><title>Dashboard - Job Hunter</title>
+  <style>body{font-family:Arial;padding:20px} .job{border:1px solid #ddd;padding:10px;margin:10px 0}</style>
+</head>
+<body>
+  <h1>Jobs</h1>
+  <div id="jobs"></div>
+
+  <h2>Post a Job (Recruiters)</h2>
+  <form id="postJob">
+    <input name="title" placeholder="Title" required />
+    <input name="company" placeholder="Company" />
+    <input name="location" placeholder="Location" />
+    <textarea name="description" placeholder="Description"></textarea>
+    <button>Post Job</button>
+  </form>
+
+  <script>
+    async function loadJobs(){
+      const res = await fetch('/api/jobs');
+      const jobs = await res.json();
+      const container = document.getElementById('jobs');
+      container.innerHTML = '';
+      jobs.forEach(j => {
+        const div = document.createElement('div');
+        div.className = 'job';
+        div.innerHTML = '<h3>'+j.title+'</h3><p>'+ (j.company||'') + ' - ' + (j.location||'') + '</p><p>'+ (j.description||'') + '</p>' +
+          '<button data-id="'+j._id+'" class="apply">Apply</button>';
+        container.appendChild(div);
+      });
+    }
+    loadJobs();
+
+    document.getElementById('postJob').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      const form = e.target;
+      const data = { title: form.title.value, company: form.company.value, location: form.location.value, description: form.description.value };
+      const res = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      alert(JSON.stringify(json));
+      loadJobs();
+    });
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.matches('.apply')) {
+        const id = e.target.dataset.id;
+        const token = localStorage.getItem('token');
+        const form = new FormData();
+        const resume = prompt('Enter a URL to a resume file, or leave blank to skip (for demo only).');
+        if (resume) {
+          // demo: we'll just send resume URL as coverLetter field since file upload needs a file input
+          form.append('coverLetter', 'Resume URL: ' + resume);
+        } else {
+          form.append('coverLetter', 'No resume uploaded (demo)');
+        }
+        const res = await fetch('/api/jobs/' + id + '/apply', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: form
+        });
+        const json = await res.json();
+        alert(JSON.stringify(json));
+      }
+    });
+  </script>
+</body>
+</html>
